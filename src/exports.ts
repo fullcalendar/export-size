@@ -74,22 +74,39 @@ const resolver = enhancedResolve.create.sync({
   mainFields: ['module', 'main'],
 })
 
-function resolveLocal(context: string) {
+function resolveLocal(context: string, entryPoint?: string) {
   const pkg = JSON.parse(fs.readFileSync(path.join(context, 'package.json'), 'utf-8'))
-  const index = pkg.module || pkg.main
-  if (index)
-    return path.join(context, index)
+  let entryPointPath
+
+  if (entryPoint) {
+    const entryPointMeta = pkg.exports?.[`./${entryPoint}`]
+    if (entryPointMeta) {
+      entryPointPath = typeof entryPointMeta === 'string'
+        ? entryPointMeta
+        : entryPointMeta.import || entryPointMeta.default
+    }
+  } else {
+    entryPointPath = pkg.module || pkg.main
+  }
+
+  if (entryPointPath)
+    return path.join(context, entryPointPath)
 }
 
 /**
  * Recursively get all exports starting
  * from a given path
  */
-export async function getAllExports(context: string, lookupPath: string, isLocal?: boolean): Promise<Record<string, string>> {
+export async function getAllExports(
+  context: string,
+  lookupPath: string,
+  isLocal?: boolean,
+  localEntryPoint?: string,
+): Promise<Record<string, string>> {
   const visited = new Set()
 
   const getAllExportsRecursive = async (ctx: string, lookPath: string, local?: boolean) => {
-    const resolvedPath = local ? resolveLocal(ctx) : resolver(ctx, lookPath)
+    const resolvedPath = local ? resolveLocal(ctx, localEntryPoint) : resolver(ctx, lookPath)
 
     if (!resolvedPath)
       return {}

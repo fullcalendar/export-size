@@ -70,6 +70,10 @@ export async function getExportsSize({
     await fs.ensureDir(dist)
   }
 
+  let localEntryPoint: string
+  if (isLocal)
+    [pkg, localEntryPoint] = pkg.split(':', 2)
+
   const dir = isLocal ? path.resolve(pkg) : path.join(dist, 'temp')
   const packageDir = isLocal ? dir : await installTemporaryPackage(pkg, dir, extraDependencies)
 
@@ -79,7 +83,7 @@ export async function getExportsSize({
     packageJSON,
   } = await loadPackageJSON(packageDir)
 
-  const exportsPaths = await getAllExports(dir, name, isLocal)
+  const exportsPaths = await getAllExports(dir, name, isLocal, localEntryPoint)
 
   if (output) {
     await fs.ensureDir(path.join(dist, 'bundled'))
@@ -87,7 +91,7 @@ export async function getExportsSize({
   }
 
   const meta: MetaInfo = {
-    name,
+    name: name + (localEntryPoint ? `/${localEntryPoint}` : ''),
     dependencies,
     versions: {},
   }
