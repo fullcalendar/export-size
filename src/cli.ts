@@ -61,13 +61,11 @@ const instance = yargs(process.argv.slice(2))
         .option('level', {
           default: 9,
           type: 'number',
-          alias: 'l',
           describe: 'gzip compression level',
         })
         .option('raw', {
           default: false,
           type: 'boolean',
-          alias: 'r',
           describe: 'display raw bytes',
         })
     },
