@@ -27,6 +27,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:dev": "tsup --watch --sourcemap",
     "dev": "tsx src/cli.ts",
     "prepublishOnly": "npm run build",
     "release": "bumpp && npm publish",
