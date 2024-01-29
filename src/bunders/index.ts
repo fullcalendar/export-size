@@ -2,6 +2,7 @@ import { ESBuildBundler } from './esbuild'
 import { RollupBundler } from './rollup'
 
 export type SupportBundler = 'esbuild' | 'rollup'
+export type SupportCompression = 'brotli' | 'gzip'
 
 export function getBundler(
   bundler: SupportBundler = 'esbuild',

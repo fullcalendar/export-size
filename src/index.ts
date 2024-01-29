@@ -6,7 +6,7 @@ import fs from 'fs-extra'
 import { version } from '../package.json'
 import { installTemporaryPackage, loadPackageJSON } from './install'
 import { getAllExports } from './exports'
-import type { Bundler, SupportBundler } from './bunders'
+import type { Bundler, SupportBundler, SupportCompression } from './bunders'
 import { getBundler } from './bunders'
 import { getPackageVersion } from './utils'
 
@@ -15,8 +15,8 @@ export async function brotliSize(input: string) {
   return (await promisify(brotliCompress)(input)).length
 }
 
-export async function gzipSize(input: string) {
-  return (await promisify(gzip)(input)).length
+export async function gzipSize(input: string, level?: number) {
+  return (await promisify(gzip)(input, { level })).length
 }
 
 export { version }
@@ -34,6 +34,8 @@ export interface ExportsSizeOptions {
   clean?: boolean
   bundler?: SupportBundler | Bundler
   exportsNames?: string[]
+  compression: SupportCompression
+  gzipLevel?: number
 }
 
 export interface MetaInfo {
@@ -60,6 +62,8 @@ export async function getExportsSize({
   clean = true,
   bundler: bunderName,
   exportsNames,
+  compression,
+  gzipLevel,
 }: ExportsSizeOptions) {
   const dist = path.resolve('export-size-output')
   const isLocal = pkg[0] === '.' || pkg[0] === '/'
@@ -130,7 +134,9 @@ export async function getExportsSize({
 
     const bundledSize = bundled.length
     const minifiedSize = minified.length
-    const minzippedSize = await brotliSize(minified)
+    const minzippedSize = compression === 'gzip'
+      ? await gzipSize(minified, gzipLevel)
+      : await brotliSize(minified)
 
     count += 1
 

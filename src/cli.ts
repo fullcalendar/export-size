@@ -5,7 +5,7 @@ import yargs from 'yargs'
 import { Presets, SingleBar } from 'cli-progress'
 import Table from 'cli-table3'
 import fs from 'fs-extra'
-import type { SupportBundler } from './bunders'
+import type { SupportBundler, SupportCompression } from './bunders'
 import { getExportsSize, readableSize } from '.'
 
 const instance = yargs(process.argv.slice(2))
@@ -51,6 +51,25 @@ const instance = yargs(process.argv.slice(2))
           choices: ['esbuild', 'rollup'],
           describe: 'bundler, can be esbuild or rollup',
         })
+        .option('compression', {
+          default: 'brotli',
+          type: 'string',
+          alias: 'c',
+          choices: ['brotli', 'gzip'],
+          describe: 'compression algorithm to use',
+        })
+        .option('level', {
+          default: 9,
+          type: 'number',
+          alias: 'l',
+          describe: 'gzip compression level',
+        })
+        .option('raw', {
+          default: false,
+          type: 'boolean',
+          alias: 'r',
+          describe: 'display raw bytes',
+        })
     },
     async (args) => {
       if (!args.package) {
@@ -74,6 +93,8 @@ const instance = yargs(process.argv.slice(2))
         extraDependencies: args.install as string[],
         output: args.output,
         bundler: args.bundler as SupportBundler,
+        compression: args.compression as SupportCompression,
+        gzipLevel: args.level,
         reporter(name, value, total) {
           bar.setTotal(total)
           bar.update(value, { name })
@@ -91,12 +112,15 @@ const instance = yargs(process.argv.slice(2))
 
       const table = new Table({
         chars: { 'mid': '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
-        head: ['export\n', 'min+brotli\n'],
+        head: ['export\n', `min+${args.compression}\n`],
         colAligns: ['left', 'right'],
       })
 
       for (const { name, minzipped } of exports)
-        table.push([name, readableSize(minzipped)])
+        table.push([
+          name,
+          args.raw ? minzipped : readableSize(minzipped),
+        ])
 
       console.log()
       console.log(`${chalk.green(meta.name)} v${packageJSON.version}`)
