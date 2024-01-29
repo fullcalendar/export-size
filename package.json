@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "esno src/cli.ts",
+    "dev": "tsx src/cli.ts",
     "prepublishOnly": "npm run build",
     "release": "bumpp && npm publish",
     "lint": "eslint ."
@@ -55,9 +55,9 @@
     "@types/yargs": "^17.0.29",
     "bumpp": "^9.2.0",
     "eslint": "^8.51.0",
-    "esno": "^0.17.0",
     "lodash-es": "^4.17.21",
     "tsup": "^7.2.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.2.2"
   }
 }
