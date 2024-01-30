@@ -114,11 +114,12 @@ const instance = yargs(process.argv.slice(2))
         colAligns: ['left', 'right'],
       })
 
-      for (const { name, minzipped } of exports)
+      for (const { name, minzipped } of exports) {
         table.push([
           name,
           args.raw ? minzipped : readableSize(minzipped),
         ])
+      }
 
       console.log()
       console.log(`${chalk.green(meta.name)} v${packageJSON.version}`)

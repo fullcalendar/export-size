@@ -85,7 +85,8 @@ function resolveLocal(context: string, entryPoint?: string) {
         ? entryPointMeta
         : entryPointMeta.import || entryPointMeta.default
     }
-  } else {
+  }
+  else {
     entryPointPath = pkg.module || pkg.main
   }
 
