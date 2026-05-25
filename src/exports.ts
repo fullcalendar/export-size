@@ -74,20 +74,37 @@ const resolver = enhancedResolve.create.sync({
   mainFields: ['module', 'main'],
 })
 
+function resolvePackageExportPath(exportConfig: unknown): string | undefined {
+  if (typeof exportConfig === 'string')
+    return exportConfig
+
+  if (!exportConfig || typeof exportConfig !== 'object')
+    return undefined
+
+  const exportObj = exportConfig as Record<string, unknown>
+
+  // Prefer ESM-compatible conditions for size measurement. Some packages nest
+  // metadata like `types` beside the actual runtime path, so recurse until a
+  // string target is found.
+  return (
+    resolvePackageExportPath(exportObj.import)
+    || resolvePackageExportPath(exportObj.default)
+    || resolvePackageExportPath(exportObj.module)
+    || resolvePackageExportPath(exportObj.require)
+  )
+}
+
 function resolveLocal(context: string, entryPoint?: string) {
   const pkg = JSON.parse(fs.readFileSync(path.join(context, 'package.json'), 'utf-8'))
-  let entryPointPath
+  let entryPointPath: string | undefined
 
   if (entryPoint) {
-    const entryPointMeta = pkg.exports?.[`./${entryPoint}`]
-    if (entryPointMeta) {
-      entryPointPath = typeof entryPointMeta === 'string'
-        ? entryPointMeta
-        : entryPointMeta.import || entryPointMeta.default
-    }
+    entryPointPath = resolvePackageExportPath(pkg.exports?.[`./${entryPoint}`])
   }
   else {
-    entryPointPath = pkg.module || pkg.main
+    entryPointPath = resolvePackageExportPath(pkg.exports?.['.'])
+      || pkg.module
+      || pkg.main
   }
 
   if (entryPointPath)
