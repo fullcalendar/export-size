@@ -48,6 +48,10 @@ export class RollupBundler extends Bundler {
     const generated = await bundle.generate({})
     const bundled = generated.output[0].code
     const { code: minified } = await minify(bundled, {
+      // Rollup generates an ES module for each measured export. Tell Terser so
+      // it can safely mangle top-level module bindings instead of preserving
+      // implementation names as possible globals.
+      module: true,
       format: {
         comments: false,
       },
